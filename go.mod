@@ -1,4 +1,4 @@
-module wingle
+module github.com/FreeFromMoney/wingle
 
 go 1.20
 
