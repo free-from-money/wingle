@@ -22,3 +22,7 @@ func TestCheckStatus(t *testing.T) {
 func TestLogin(t *testing.T) {
 	Login()
 }
+
+func Test_checkWingleIsConnected(t *testing.T) {
+	t.Log(checkWingleIsConnected())
+}

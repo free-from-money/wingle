@@ -21,13 +21,12 @@ const (
 	tokenHeader        = `__RequestVerificationToken`
 	rebootPayload      = `<?xml version="1.0" encoding="UTF-8"?><request><Control>1</Control></request>`
 	defaultContentType = `text/xml`
-	defaultPw          = `12345678`
 )
 
 var (
 	client = req.C().
 		SetBaseURL(baseUrl).
-		SetTimeout(5 * time.Second).
+		SetTimeout(time.Second).
 		SetCommonRetryCount(-1)
 
 	once = sync.Once{}
@@ -35,8 +34,15 @@ var (
 
 func init() {
 	once.Do(func() {
-
+		if !checkWingleIsConnected() {
+			log.Fatal("wingle is not connected")
+		}
 	})
+}
+
+func checkWingleIsConnected() bool {
+	res := client.Get().SetRetryCount(0).Do()
+	return res.IsSuccessState()
 }
 
 func ChangeIp() {
