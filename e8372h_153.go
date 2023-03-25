@@ -125,9 +125,4 @@ func RebootRouter() {
 		MustPost(rebootPath)
 
 	res.Header.Set(`Content-Type`, defaultContentType)
-
-	var result string
-	res.Unmarshal(&result)
-
-	log.Println(result)
 }
