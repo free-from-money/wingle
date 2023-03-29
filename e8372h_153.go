@@ -13,6 +13,7 @@ const (
 	host    = `192.168.8.1`
 	baseUrl = `http://` + host
 
+	// huawei
 	sessionPath = `/api/webserver/SesTokInfo`
 	rebootPath  = `/api/device/control`
 	statusPath  = `/api/monitoring/status`
@@ -21,13 +22,23 @@ const (
 	tokenHeader        = `__RequestVerificationToken`
 	rebootPayload      = `<?xml version="1.0" encoding="UTF-8"?><request><Control>1</Control></request>`
 	defaultContentType = `text/xml`
+
+	// oem
+	oemRebootPath    = `/reqproc/proc_post`
+	oemContentType   = `application/x-www-form-urlencoded; charset=UTF-8`
+	oemRebootPayload = `goformId=REBOOT_DEVICE`
 )
 
 var (
-	client = req.C().
-		SetBaseURL(baseUrl).
-		SetTimeout(time.Second).
-		SetCommonRetryCount(-1)
+	oemClient = req.C().
+			SetBaseURL(baseUrl).
+			SetTimeout(time.Second).
+			SetCommonRetryCount(0)
+
+	huaweiClient = req.C().
+			SetBaseURL(baseUrl).
+			SetTimeout(time.Second).
+			SetCommonRetryCount(-1)
 
 	once = sync.Once{}
 )
@@ -41,7 +52,7 @@ func init() {
 }
 
 func checkWingleIsConnected() bool {
-	res := client.Get().SetRetryCount(0).Do()
+	res := huaweiClient.Get().SetRetryCount(0).Do()
 	return res.IsSuccessState()
 }
 
@@ -60,8 +71,8 @@ func ChangeIp() {
 	}
 }
 
-func checkStatus() bool {
-	get, err := client.R().
+func isHuawei() bool {
+	get, err := huaweiClient.R().
 		SetRetryCount(0).
 		Get(statusPath)
 	if err != nil {
@@ -75,7 +86,7 @@ func checkStatus() bool {
 
 func getSessionToken() SesTok {
 	var st SesTok
-	res, _ := client.R().
+	res, _ := huaweiClient.R().
 		SetRetryCount(0).
 		Get(sessionPath)
 
@@ -88,7 +99,7 @@ func getSessionToken() SesTok {
 func Login() SesTok {
 	st := getSessionToken()
 	payload := NewLoginRequest(st.TokInfo)
-	res := client.R().
+	res := huaweiClient.R().
 		SetRetryCount(0).
 		SetCookies(st.GetCookie()).
 		SetHeader(tokenHeader, st.TokInfo).
@@ -105,6 +116,21 @@ func Login() SesTok {
 }
 
 func RebootRouter() {
+	if isHuawei() {
+		rebootHuawei()
+	} else {
+		rebootOEM()
+	}
+}
+
+func rebootOEM() {
+	_, _ = oemClient.R().
+		SetBodyString(oemRebootPayload).
+		SetHeader(`Content-Type`, oemContentType).
+		Post(oemRebootPath)
+}
+
+func rebootHuawei() {
 	st := Login()
 	defaultHeaders := map[string]string{
 		"Host":             host,
@@ -112,7 +138,7 @@ func RebootRouter() {
 		"Referer":          baseUrl + `/html/reboot.html`,
 		"X-Requested-With": `XMLHTTPRequest`,
 	}
-	res := client.R().
+	res := huaweiClient.R().
 		DisableAutoReadResponse().
 		DisableTrace().
 		SetCookies(st.GetCookie()).
