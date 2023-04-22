@@ -84,7 +84,7 @@ func (w *wingle) ChangeIp() {
 	currentIp := GetIp()
 	log.Printf("현재 IP={%s}", currentIp)
 	for {
-		w.RebootRouter()
+		w.rebootRouter()
 		time.Sleep(5 * time.Second)
 		changedIp := GetIp()
 		log.Printf("변경 후 IP={%s}", changedIp)
@@ -120,7 +120,7 @@ func (w *wingle) getSessionToken() SesTok {
 	return st
 }
 
-func (w *wingle) Login() SesTok {
+func (w *wingle) login() SesTok {
 	st := w.getSessionToken()
 	payload := NewLoginRequest(st.TokInfo)
 	res := w.huaweiClient.R().
@@ -139,7 +139,7 @@ func (w *wingle) Login() SesTok {
 	}
 }
 
-func (w *wingle) RebootRouter() {
+func (w *wingle) rebootRouter() {
 	if w.isHuawei() {
 		w.rebootHuawei()
 	} else {
@@ -155,7 +155,7 @@ func (w *wingle) rebootOEM() {
 }
 
 func (w *wingle) rebootHuawei() {
-	st := w.Login()
+	st := w.login()
 	defaultHeaders := map[string]string{
 		"Host":             defaultHost,
 		"Origin":           w.baseUrl(),
