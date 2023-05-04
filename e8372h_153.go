@@ -28,7 +28,7 @@ const (
 	oemRebootPayload = `goformId=REBOOT_DEVICE`
 )
 
-type wingle struct {
+type Wingle struct {
 	Host         string
 	oemClient    *req.Client
 	huaweiClient *req.Client
@@ -36,7 +36,7 @@ type wingle struct {
 }
 
 // NewWingle args defaultHost must 0 or 1
-func NewWingle(host ...string) *wingle {
+func NewWingle(host ...string) *Wingle {
 	if len(host) > 1 {
 		log.Fatal("defaultHost must be just one")
 	}
@@ -46,8 +46,8 @@ func NewWingle(host ...string) *wingle {
 	return newWingle(host[0])
 }
 
-func newWingle(host string) *wingle {
-	w := &wingle{
+func newWingle(host string) *Wingle {
+	w := &Wingle{
 		Host: host,
 		once: &sync.Once{},
 	}
@@ -64,23 +64,23 @@ func newWingle(host string) *wingle {
 
 	w.once.Do(func() {
 		if !w.checkWingleIsConnected() {
-			log.Fatal("wingle is not connected")
+			log.Fatal("Wingle is not connected")
 		}
 	})
 
 	return w
 }
 
-func (w *wingle) baseUrl() string {
+func (w *Wingle) baseUrl() string {
 	return "http://" + w.Host
 }
 
-func (w *wingle) checkWingleIsConnected() bool {
+func (w *Wingle) checkWingleIsConnected() bool {
 	res := w.huaweiClient.Get().SetRetryCount(0).Do()
 	return res.IsSuccessState()
 }
 
-func (w *wingle) ChangeIp() {
+func (w *Wingle) ChangeIp() {
 	currentIp := GetIp()
 	log.Printf("현재 IP={%s}", currentIp)
 	for {
@@ -95,7 +95,7 @@ func (w *wingle) ChangeIp() {
 	}
 }
 
-func (w *wingle) isHuawei() bool {
+func (w *Wingle) isHuawei() bool {
 	get, err := w.huaweiClient.R().
 		SetRetryCount(0).
 		Get(statusPath)
@@ -108,7 +108,7 @@ func (w *wingle) isHuawei() bool {
 	return true
 }
 
-func (w *wingle) getSessionToken() SesTok {
+func (w *Wingle) getSessionToken() SesTok {
 	var st SesTok
 	res, _ := w.huaweiClient.R().
 		SetRetryCount(0).
@@ -120,7 +120,7 @@ func (w *wingle) getSessionToken() SesTok {
 	return st
 }
 
-func (w *wingle) login() SesTok {
+func (w *Wingle) login() SesTok {
 	st := w.getSessionToken()
 	payload := NewLoginRequest(st.TokInfo)
 	res := w.huaweiClient.R().
@@ -139,7 +139,7 @@ func (w *wingle) login() SesTok {
 	}
 }
 
-func (w *wingle) rebootRouter() {
+func (w *Wingle) rebootRouter() {
 	if w.isHuawei() {
 		w.rebootHuawei()
 	} else {
@@ -147,14 +147,14 @@ func (w *wingle) rebootRouter() {
 	}
 }
 
-func (w *wingle) rebootOEM() {
+func (w *Wingle) rebootOEM() {
 	_, _ = w.oemClient.R().
 		SetBodyString(oemRebootPayload).
 		SetHeader(`Content-Type`, oemContentType).
 		Post(oemRebootPath)
 }
 
-func (w *wingle) rebootHuawei() {
+func (w *Wingle) rebootHuawei() {
 	st := w.login()
 	defaultHeaders := map[string]string{
 		"Host":             defaultHost,
