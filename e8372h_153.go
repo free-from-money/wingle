@@ -2,7 +2,7 @@ package wingle
 
 import (
 	"bytes"
-	"github.com/secr3t/req/v3"
+	"github.com/imroc/req/v3"
 	"log"
 	"strings"
 	"sync"

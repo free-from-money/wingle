@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/secr3t/req/v3"
+	"github.com/imroc/req/v3"
 	"time"
 )
 
